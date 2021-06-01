@@ -2,7 +2,7 @@ import urllib
 from datetime import datetime
 from time import sleep
 from meilisearch._httprequests import HttpRequests
-from meilisearch.errors import MeiliSearchTimeoutError
+from meilisearch.errors import MeiliSearchApiError, MeiliSearchTimeoutError
 
 # pylint: disable=too-many-public-methods
 class Index():
@@ -40,6 +40,20 @@ class Index():
             An error containing details about why MeiliSearch can't process your request. MeiliSearch error codes are described here: https://docs.meilisearch.com/errors/#meilisearch-errors
         """
         return self.http.delete(f'{self.config.paths.index}/{self.uid}')
+
+    def delete_if_exists(self):
+        """Deletes the index if it already exists
+
+        Raises
+        ------
+        MeiliSearchApiError
+            An error containing details about why MeiliSearch can't process your request. MeiliSearch error codes are described here: https://docs.meilisearch.com/errors/#meilisearch-errors
+        """
+        try:
+            self.delete()
+        except MeiliSearchApiError as e:
+            if e.error_code != "index_not_found":
+                raise e
 
     def update(self, **body):
         """Update the index primary-key.

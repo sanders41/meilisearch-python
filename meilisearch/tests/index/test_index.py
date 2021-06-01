@@ -3,8 +3,10 @@
 from datetime import datetime
 
 import pytest
+from meilisearch.client import Client
+from meilisearch.errors import MeiliSearchApiError
 from meilisearch.index import Index
-from meilisearch.tests import common
+from meilisearch.tests import BASE_URL, common, MASTER_KEY
 
 def test_create_index(client):
     """Tests creating an index."""
@@ -184,3 +186,35 @@ def test_delete_index(client):
     with pytest.raises(Exception):
         client.get_index(uid=common.INDEX_UID3)
     assert len(client.get_indexes()) == 0
+
+@pytest.mark.usefixtures("indexes_sample")
+def test_delete_if_exists(client):
+    assert client.get_index(uid=common.INDEX_UID)
+    Client(BASE_URL, MASTER_KEY).index(common.INDEX_UID).delete_if_exists()
+    with pytest.raises(MeiliSearchApiError):
+        client.get_index(uid=common.INDEX_UID)
+
+def test_delete_if_exists_no_delete(client):
+    with pytest.raises(MeiliSearchApiError):
+        client.get_index(uid="none")
+
+    Client(BASE_URL, MASTER_KEY).index("none").delete_if_exists()
+
+    with pytest.raises(MeiliSearchApiError):
+        client.get_index(uid="none")
+
+@pytest.mark.usefixtures("index_sample")
+def test_delete_index_if_exists(client):
+    assert client.get_index(uid=common.INDEX_UID)
+    client.delete_index_if_exists(common.INDEX_UID)
+    with pytest.raises(MeiliSearchApiError):
+        client.get_index(uid=common.INDEX_UID)
+
+def test_delete_index_if_exists(client):
+    with pytest.raises(MeiliSearchApiError):
+        client.get_index(uid="none")
+    
+    client.delete_index_if_exists("none")
+
+    with pytest.raises(MeiliSearchApiError):
+        client.get_index(uid="none")

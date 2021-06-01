@@ -24,6 +24,26 @@ class Client():
 
         self.http = HttpRequests(self.config)
 
+    def delete_index_if_exists(self, uid):
+        """Deletes an index if it already exists
+
+        Parameters
+        ----------
+        uid: str
+            UID of the index.
+
+        Raises
+        ------
+        MeiliSearchApiError
+            An error containing details about why MeiliSearch can't process your request. MeiliSearch error codes are described here: https://docs.meilisearch.com/errors/#meilisearch-errors
+        """
+
+        try:
+            self.http.delete(f'{self.config.paths.index}/{uid}')
+        except MeiliSearchApiError as e:
+            if e.error_code != "index_not_found":
+                raise e
+
     def create_index(self, uid, options=None):
         """Create an index.
 
